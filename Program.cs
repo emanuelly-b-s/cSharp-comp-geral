@@ -123,8 +123,39 @@ public class Pesquisador
     /// </summary>
     public static void Pesquisa4(Universidade uni)
     {
-        WriteLine("Não implementado!");
+        var queryaluno = uni.Turmas.Select(t => new //dentro da turma vai selecionar
+        {
+            ProfessorID = t.ProfessorID,//o id do prof que lesiona na turma
+            QtdAlunos = uni.Alunos.Where(a => a.TurmasMatriculados.Contains(t.ID))
+                                  .Count() //criando novo aluno //e a qtd de alunos matrculados
+                                             //para contar os alunos, verificamos em aluno, nas turmas que ele esta matriculado, aonde contem o id do professor
+                                            //pois ai significa que o aluno pertence a turma daquele professor
+        });
+
+        var query = uni.Professores.Join(queryaluno,
+                                    prof => prof.ID,
+                                    id_prof_da_turma => id_prof_da_turma.ProfessorID,
+                                    (professor, turma) => new
+                                    {
+                                        ProfessorNome = professor.Nome,
+                                        QtdAlunos = turma.QtdAlunos
+                                    })
+                                    .GroupBy(p => p.ProfessorNome)
+                                    .Select(g =>
+                                    {
+                                        return new
+                                        {
+                                            ProfessorNome = g.Key,
+                                            QtdAlunos = g.Sum(p => p.QtdAlunos)
+                                        };
+                                    });
+
+        foreach (var item in query)
+            WriteLine($"Professor: {item.ProfessorNome} - Qtd Alunos {item.QtdAlunos}");
+        
     }
+
+//&-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
     /// Top 10 Professores com mais alunos da universidade
