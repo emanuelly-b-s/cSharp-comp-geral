@@ -52,19 +52,19 @@ public class Pesquisador
     /// </summary>
     public static void Pesquisa2(Universidade uni)
     {
-        var query = uni.Departamentos.Join(uni.Disciplinas, 
-                                        dep => dep.ID, 
-                                        disciplina => disciplina.DepartamentoID, 
+        var query = uni.Departamentos.Join(uni.Disciplinas,
+                                        dep => dep.ID,
+                                        disciplina => disciplina.DepartamentoID,
                                         (dep, disciplina) => new
                                         {
                                             NomeDep = dep.Nome,
                                             Disciplinas = disciplina.Nome
                                         })
-                                        .GroupBy(dept => dept.NomeDep) 
+                                        .GroupBy(dept => dept.NomeDep)
                                         .Select(g => new
                                         {
                                             NomeDep = g.Key,
-                                            Disciplinas = g.Count() 
+                                            Disciplinas = g.Count()
                                         });
 
         foreach (var item in query)
@@ -92,9 +92,9 @@ public class Pesquisador
 
         var queryAluno = uni.Alunos.Select(a =>
                                         {
-                                            var prof = queryProf 
-                                                        .Where(pf => a.TurmasMatriculados.Contains(pf.idTurma)) 
-                                                        .DistinctBy(pf => pf.NomeProf); 
+                                            var prof = queryProf
+                                                        .Where(pf => a.TurmasMatriculados.Contains(pf.idTurma))
+                                                        .DistinctBy(pf => pf.NomeProf);
                                             return new
                                             {
                                                 NomeAluno = a.Nome,
@@ -102,6 +102,8 @@ public class Pesquisador
                                                 Professores = prof
                                             };
                                         });
+
+
 
         foreach (var item in queryAluno)
         {
@@ -123,13 +125,51 @@ public class Pesquisador
     /// </summary>
     public static void Pesquisa4(Universidade uni)
     {
-        var queryaluno = uni.Turmas.Select(t => new //dentro da turma vai selecionar
+        var queryaluno = uni.Turmas.Select(t => new
         {
-            ProfessorID = t.ProfessorID,//o id do prof que lesiona na turma
+            ProfessorID = t.ProfessorID,
             QtdAlunos = uni.Alunos.Where(a => a.TurmasMatriculados.Contains(t.ID))
-                                  .Count() //criando novo aluno //e a qtd de alunos matrculados
-                                             //para contar os alunos, verificamos em aluno, nas turmas que ele esta matriculado, aonde contem o id do professor
-                                            //pois ai significa que o aluno pertence a turma daquele professor
+                                  .Count()
+        });
+
+        var query = uni.Professores.Join(queryaluno,
+                                    prof => prof.ID,
+                                    id_prof_da_turma => id_prof_da_turma.ProfessorID,
+                                    (professor, turma) => new
+                                    {
+                                        ProfessorNome = professor.Nome,
+                                        SalarioProf = professor.Salario,
+                                        QtdAlunos = turma.QtdAlunos
+                                    })
+                                    .GroupBy(p => p.ProfessorNome)
+                                    .Select(g =>
+                                    {
+                                        return new
+                                        {
+                                            ProfessorNome = g.Key,
+                                            QtdAlunos = g.Sum(p => p.QtdAlunos),
+                                            SalarioProf = g.Sum(Sal => Sal.SalarioProf)
+                                        };
+                                    });
+
+
+        foreach (var item in query)
+            WriteLine($"Professor: {item.ProfessorNome} - Salario {item.SalarioProf} - Qtd Alunos {item.QtdAlunos}");
+
+    }
+
+    //&-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Top 10 Professores com mais alunos da universidade
+    /// </summary>
+    public static void Pesquisa5(Universidade uni)
+    {
+        var queryaluno = uni.Turmas.Select(t => new
+        {
+            ProfessorID = t.ProfessorID,
+            QtdAlunos = uni.Alunos.Where(a => a.TurmasMatriculados.Contains(t.ID))
+                                  .Count()
         });
 
         var query = uni.Professores.Join(queryaluno,
@@ -146,23 +186,20 @@ public class Pesquisador
                                         return new
                                         {
                                             ProfessorNome = g.Key,
-                                            QtdAlunos = g.Sum(p => p.QtdAlunos)
+                                            QtdAlunos = g.Sum(p => p.QtdAlunos),
                                         };
-                                    });
+                                    })
+                                    .Take(10).OrderByDescending(a => a.QtdAlunos);
 
+        var cont = 1;
+        WriteLine("Top 10 Professores com mais Alunos");
         foreach (var item in query)
-            WriteLine($"Professor: {item.ProfessorNome} - Qtd Alunos {item.QtdAlunos}");
-        
-    }
+        {
+            WriteLine($"{cont}º: {item.ProfessorNome}  - Qtd Alunos {item.QtdAlunos}");
+                        cont++;
+        }
+            
 
-//&-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    /// <summary>
-    /// Top 10 Professores com mais alunos da universidade
-    /// </summary>
-    public static void Pesquisa5(Universidade uni)
-    {
-        WriteLine("Não implementado!");
     }
 
     /// <summary>
