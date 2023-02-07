@@ -208,7 +208,39 @@ public class Pesquisador
     /// </summary>
     public static void Pesquisa6(Universidade uni)
     {
-        WriteLine("Não implementado!");
+        var queryaluno = uni.Turmas.Select(t => new
+        {
+            ProfessorID = t.ProfessorID,
+            QtdAlunos = uni.Alunos.Where(a => a.TurmasMatriculados.Contains(t.ID))
+                                  .Count(),
+            Alunos =  uni.Alunos.Where(a => a.TurmasMatriculados.Contains(t.ID))         
+        });
+        
+
+        var query = uni.Professores.Join(queryaluno,
+                                    prof => prof.ID,
+                                    id_prof_da_turma => id_prof_da_turma.ProfessorID,
+                                    (professor, turma) => new
+                                    {
+                                        ProfessorNome = professor.Nome,
+                                        ProfSalario = professor.Salario,
+                                        QtdAlunos = turma.QtdAlunos,
+                                        Alunos = turma.Alunos
+                                    })
+                                    .GroupBy(a => a.Alunos)
+                                    .Select(g =>
+                                    {
+                                        return new
+                                        {
+                                            NomeAlunos = g.Key,
+                                            Custo = g.Sum(p => p.ProfSalario / p.QtdAlunos) + 300,
+                                        };
+                                    });
+        
+        foreach (var alunos in query)
+        {
+            WriteLine($"{alunos.NomeAlunos} - Custo {alunos.Custo}");
+        }
     }
 }
 
