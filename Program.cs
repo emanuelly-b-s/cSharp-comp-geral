@@ -213,10 +213,13 @@ public class Pesquisador
             ProfessorID = t.ProfessorID,
             QtdAlunos = uni.Alunos.Where(a => a.TurmasMatriculados.Contains(t.ID))
                                   .Count(),
-            Alunos =  uni.Alunos.Where(a => a.TurmasMatriculados.Contains(t.ID))         
+            Alunos =  uni.Alunos.Where(a => a.TurmasMatriculados.Contains(t.ID)),
+            NomeAluno = uni.Alunos.Select(a => new {
+                aluno = a.Nome
+            })
         });
-        
 
+       
         var query = uni.Professores.Join(queryaluno,
                                     prof => prof.ID,
                                     id_prof_da_turma => id_prof_da_turma.ProfessorID,
@@ -225,9 +228,9 @@ public class Pesquisador
                                         ProfessorNome = professor.Nome,
                                         ProfSalario = professor.Salario,
                                         QtdAlunos = turma.QtdAlunos,
-                                        Alunos = turma.Alunos
+                                        NomeAluno = turma.NomeAluno
                                     })
-                                    .GroupBy(a => a.Alunos)
+                                    .GroupBy(a => a.NomeAluno)
                                     .Select(g =>
                                     {
                                         return new
